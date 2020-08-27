@@ -1,0 +1,35 @@
+replicaCount: 1
+
+image:
+  webapp:
+    repository: nginx
+    tag: "1.19.2-alpine-perl"
+  pullPolicy: IfNotPresent
+
+internalPort: 80
+hostPort: 8080
+
+Volumes:
+  - name: html-config
+    configMap:
+      name: webapp
+
+VolumeMounts:
+  - name: html-config
+    mountPath: /usr/share/nginx/html/index.html
+    subPath: index.html
+
+livenessProbe:
+  path: "/"
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  failureThreshold: 6
+  timeoutSeconds: 5
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi

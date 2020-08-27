@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "webapp.fullname" . }}
+  labels:
+    app: {{ template "webapp.name" . }}
+    chart: {{ template "webapp.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "webapp.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "webapp.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+       - name: {{ .Chart.Name }}
+         image: {{ .Values.image.webapp.repository }}:{{ .Values.image.webapp.tag }}
+         imagePullPolicy: {{ .Values.image.pullPolicy }}
+         ports:
+           - containerPort: {{ .Values.internalPort }}
+          {{- with .Values.hostPort }}
+             hostPort: {{ . }}
+          {{- end }}
+         livenessProbe:
+           httpGet:
+             path: {{ .Values.livenessProbe.path }}
+             port: {{ .Values.internalPort }}
+           initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+           periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+           failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+           timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+         {{- with .Values.VolumeMounts }}
+         volumeMounts:
+{{ toYaml . | indent 12 }}
+         {{- end }}
+      {{- with .Values.Volumes }}
+      volumes:
+{{ toYaml . | indent 8 }}
+      {{- end }}
